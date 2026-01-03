@@ -1,0 +1,54 @@
+{
+  "name": "nodemation-automation",
+  "version": "0.1.0",
+  "description": "CLI tool to generate n8n workflows from natural language using Claude AI",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "nodemation": "dist/index.js"
+  },
+  "scripts": {
+    "extract-nodes": "node scripts/extract-nodes.mjs",
+    "extract-nodes:verbose": "node scripts/extract-nodes.mjs --verbose",
+    "build": "npm run extract-nodes && tsc",
+    "start": "node dist/index.js",
+    "dev": "npm run extract-nodes && tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "biome format --write src/",
+    "format:check": "biome format src/",
+    "check": "npm run format:check && npm run lint"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.10",
+    "@eslint/js": "^9.39.2",
+    "@n8n/n8n-nodes-langchain": "^2.1.4",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.39.2",
+    "n8n-nodes-base": "^2.1.4",
+    "n8n-workflow": "^2.2.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.51.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "n8n",
+    "workflow",
+    "ai",
+    "claude",
+    "automation"
+  ],
+  "license": "MIT"
+}
