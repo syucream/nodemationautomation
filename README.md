@@ -75,12 +75,19 @@ npx tsx src/index.ts -i
 
 | Command | Description |
 |---------|-------------|
-| `<prompt>` | Generate a workflow from your description |
-| `:save <file>` | Save last workflow to file (default: workflow.json) |
-| `:model <name>` | Change model (haiku/sonnet/opus) |
-| `:verbose` | Toggle verbose mode on/off |
-| `:help` | Show available commands |
-| `:quit` | Exit interactive mode |
+| `<prompt>` | Add to/refine the current workflow |
+| `/new` | Start a new workflow (clear context) |
+| `/validate` | Validate current workflow against n8n API |
+| `/deploy` | Deploy workflow to n8n |
+| `/status` | Show current workflow status |
+| `/save <file>` | Save last workflow to file (default: workflow.json) |
+| `/copy` | Copy last workflow JSON to clipboard |
+| `/model <name>` | Change model (haiku/sonnet/opus) |
+| `/verbose` | Toggle verbose mode on/off |
+| `/help` | Show available commands |
+| `/quit` | Exit interactive mode |
+
+> **Note:** Commands start with `/` (not `:`). The n8n API commands (`/validate`, `/deploy`) require `N8N_API_KEY` to be configured.
 
 ## Usage Examples
 
@@ -109,6 +116,7 @@ npx tsx src/index.ts -i
 | Option | Description |
 |--------|-------------|
 | `-n, --name <name>` | Set workflow name (default: "Generated Workflow") |
+| `-o, --output <file>` | Output file path (default: stdout) |
 | `-m, --model <model>` | Claude model: `haiku`, `sonnet`, `opus`, or full model ID |
 | `-v, --verbose` | Show detailed progress and agent reasoning |
 | `-i, --interactive` | Force interactive mode |
@@ -152,26 +160,15 @@ If validation fails, an error is returned instead of invalid JSON.
 
 ## Supported Nodes
 
-### Triggers
-| Node | Type |
-|------|------|
-| Manual Trigger | `n8n-nodes-base.manualTrigger` |
-| Webhook | `n8n-nodes-base.webhook` |
-| Schedule Trigger | `n8n-nodes-base.scheduleTrigger` |
-| Slack Trigger | `n8n-nodes-base.slackTrigger` |
+Node definitions are auto-generated from `n8n-nodes-base` package using `npm run extract-nodes`.
 
-### Actions
-| Node | Type |
-|------|------|
-| HTTP Request | `n8n-nodes-base.httpRequest` |
-| Slack | `n8n-nodes-base.slack` |
+The agent has knowledge of all standard n8n nodes including:
 
-### Control Flow
-| Node | Type |
-|------|------|
-| Set | `n8n-nodes-base.set` |
-| IF | `n8n-nodes-base.if` |
-| Code | `n8n-nodes-base.code` |
+- **Triggers**: Webhook, Schedule, Manual, Slack, and many more
+- **Actions**: HTTP Request, Slack, Set, Code, IF, and 400+ integrations
+- **Control Flow**: IF, Switch, Merge, Split, Loop, and other flow control nodes
+
+Claude uses its knowledge of n8n combined with the extracted node definitions to generate valid workflows. Run `npm run extract-nodes:verbose` to see all available nodes.
 
 ## Configuration
 
@@ -181,8 +178,9 @@ If validation fails, an error is returned instead of invalid JSON.
 |----------|----------|-------------|
 | `ANTHROPIC_API_KEY` | Yes | Your Anthropic API key |
 | `CLAUDE_MODEL` | No | Default model alias or full ID (default: `haiku`) |
-| `N8N_API_KEY` | No | n8n API key (for future API integration) |
+| `N8N_API_KEY` | No | n8n API key (enables `/validate` and `/deploy` commands) |
 | `N8N_BASE_URL` | No | n8n instance URL (default: `http://localhost:5678`) |
+| `MAX_VALIDATION_RETRIES` | No | Max retries for validation failures before asking human (default: `3`) |
 
 ## Example Output
 
@@ -229,17 +227,34 @@ $ npx tsx src/index.ts "Webhook that sends data to Slack #general"
 ## Development
 
 ```bash
+# Extract n8n node definitions (required before build)
+npm run extract-nodes
+
 # Run tests
 npm test
 
 # Watch mode for tests
 npm run test:watch
 
+# Lint
+npm run lint
+npm run lint:fix
+
+# Format
+npm run format
+npm run format:check
+
+# Run all checks
+npm run check
+
 # Type check
 npx tsc --noEmit
 
-# Build
+# Build (includes extract-nodes)
 npm run build
+
+# Development mode
+npm run dev
 ```
 
 ## Project Structure
@@ -253,20 +268,21 @@ src/
 │   ├── prompts.ts        # System prompts for Claude
 │   └── workflow-builder.ts  # Main agent logic
 ├── tools/
-│   └── index.ts          # Tool definitions for Claude
-└── workflow/
-    ├── types.ts          # n8n workflow type definitions
-    ├── state.ts          # Workflow state management
-    ├── node-registry.ts  # Supported node definitions
-    └── validator.ts      # JSON schema validation
+│   ├── index.ts          # Tool definitions for Claude
+│   └── n8n-api.ts        # n8n REST API client
+├── workflow/
+│   ├── types.ts          # n8n workflow type definitions
+│   ├── state.ts          # Workflow state management
+│   └── validator.ts      # JSON schema validation
+└── generated/
+    └── node-definitions.json  # Auto-generated n8n node definitions
 ```
 
 ## Roadmap
 
+- [x] n8n API integration (validate and deploy workflows directly)
 - [ ] REST API server (Hono)
 - [ ] Slack Bot integration
-- [ ] More node types (Google Sheets, Airtable, etc.)
-- [ ] n8n API integration (create workflows directly)
 - [ ] Workflow history in interactive mode
 
 ## License
